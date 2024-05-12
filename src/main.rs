@@ -1,17 +1,18 @@
+// main.rs
+
+mod ui; // Declare the ui module
+
+use crossterm::event;
+use crossterm::event::DisableMouseCapture;
+use crossterm::event::EnableMouseCapture;
+use crossterm::terminal::EnterAlternateScreen;
+use crossterm::terminal::LeaveAlternateScreen;
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{disable_raw_mode, enable_raw_mode},
 };
 use std::{error::Error, io};
-use tui::{
-    backend::{Backend, CrosstermBackend},
-    layout::{Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    text::{Span, Spans},
-    widgets::{Block, Borders, Paragraph, Wrap},
-    Terminal,
-};
+use tui::backend::CrosstermBackend;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Setup terminal
@@ -19,45 +20,26 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let mut terminal = tui::Terminal::new(backend)?;
 
     let mut input = String::new();
+    let mut output = String::new();
 
     loop {
-        terminal.draw(|f| {
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(1)
-                .constraints([Constraint::Length(3), Constraint::Min(1)].as_ref())
-                .split(f.size());
+        ui::draw(&mut terminal, &input, &output)?; // Draw UI
 
-            let input_widget = Paragraph::new(input.clone())
-                .block(Block::default().title("Input").borders(Borders::ALL));
-            f.render_widget(input_widget, chunks[0]);
-
-            let output_widget = Paragraph::new(Span::styled(
-                "Output: ",
-                Style::default()
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-            ))
-            .wrap(Wrap { trim: true })
-            .block(Block::default().title("Output").borders(Borders::ALL));
-            f.render_widget(output_widget, chunks[1]);
-        })?;
-
-        if let Event::Key(key) = event::read()? {
+        if let event::Event::Key(key) = event::read()? {
             match key.code {
-                KeyCode::Enter => {
-                    // Here you would process the `input` string
-                    // and update the output accordingly
+                event::KeyCode::Enter => {
+                    // Process input and update output
+                    output = process_input(&input); // Replace with your logic
                     input.clear();
                 }
-                KeyCode::Char(c) => input.push(c),
-                KeyCode::Backspace => {
+                event::KeyCode::Char(c) => input.push(c),
+                event::KeyCode::Backspace => {
                     input.pop();
                 }
-                KeyCode::Esc => {
+                event::KeyCode::Esc => {
                     break;
                 }
                 _ => {}
@@ -75,4 +57,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     terminal.show_cursor()?;
 
     Ok(())
+}
+
+// Placeholder function for input processing (replace with your own logic)
+fn process_input(input: &str) -> String {
+    format!("You entered: {}", input)
 }
