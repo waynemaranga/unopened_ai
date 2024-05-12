@@ -2,7 +2,8 @@
 
 mod bot;
 mod decoder;
-mod ui;
+// mod ui;
+mod ux;
 
 use crossterm::event; // provides functionality to read keyboard, mouse and terminal resize events.
 use crossterm::event::DisableMouseCapture;
@@ -13,9 +14,9 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode},
 };
+use ratatui::backend::CrosstermBackend;
 use std::{error::Error, io};
 use tokio::runtime::Runtime;
-use tui::backend::CrosstermBackend;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let rt = Runtime::new()?; // create tokio runtime outside the event loop
@@ -25,13 +26,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?; // macro from the crossterm crate
     let backend = CrosstermBackend::new(stdout); // creates backend for the TUI
-    let mut terminal = tui::Terminal::new(backend)?; // creates an instance of the TUI
+    let mut terminal = ratatui::Terminal::new(backend)?; // creates an instance of the TUI
 
     let mut input = String::new();
     let mut output = String::new();
 
     loop {
-        ui::draw(&mut terminal, &input, &output)?; // draw the ui //TODO: find ui configs/customizations
+        // ui::draw(&mut terminal, &input, &output)?; // using tui-rs //TODO: find ui configs/customizations
+        ux::draw(&mut terminal, &input, &output)?; // using ratatui //TODO: find ui configs/customizations
 
         // ... Handle keypress/keystroke events
         if let event::Event::Key(key) = event::read()? {
