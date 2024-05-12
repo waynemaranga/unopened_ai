@@ -1,9 +1,10 @@
 // main.rs
 
 mod bot;
-mod ui; // Declare the ui module
+mod decoder;
+mod ui;
 
-use crossterm::event;
+use crossterm::event; // provides functionality to read keyboard, mouse and terminal resize events.
 use crossterm::event::DisableMouseCapture;
 use crossterm::event::EnableMouseCapture;
 use crossterm::terminal::EnterAlternateScreen;
@@ -17,77 +18,53 @@ use tokio::runtime::Runtime;
 use tui::backend::CrosstermBackend;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // ... create tokio runtime outside the event loop
-    let rt = Runtime::new()?;
+    let rt = Runtime::new()?; // create tokio runtime outside the event loop
 
-    // ... set up the terminal
-    enable_raw_mode()?; //? what's raw mode?
+    // ... Set up the terminal
+    enable_raw_mode()?; // bypass standard input processing
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = tui::Terminal::new(backend)?;
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?; // macro from the crossterm crate
+    let backend = CrosstermBackend::new(stdout); // creates backend for the TUI
+    let mut terminal = tui::Terminal::new(backend)?; // creates an instance of the TUI
 
     let mut input = String::new();
     let mut output = String::new();
 
-    /* -- Old Event loop
-        loop {
-            ui::draw(&mut terminal, &input, &output)?; // Draw UI
-
-            if let event::Event::Key(key) = event::read()? {
-                match key.code {
-                    event::KeyCode::Enter => {
-                        // Process input and update output
-                        output = process_input(&input); // Replace with your logic
-                        input.clear();
-                    }
-                    event::KeyCode::Char(c) => input.push(c),
-                    event::KeyCode::Backspace => {
-                        input.pop();
-                    }
-                    event::KeyCode::Esc => {
-                        break;
-                    }
-                    _ => {}
-                }
-            }
-        }
-    */
-
     loop {
         ui::draw(&mut terminal, &input, &output)?; // draw the ui //TODO: find ui configs/customizations
 
+        // ... Handle keypress/keystroke events
         if let event::Event::Key(key) = event::read()? {
             match key.code {
+                // do something if a key is pressed; for special keys, perform a defined action if key is pressed
                 event::KeyCode::Enter => {
-                    let input_text = input.clone();
-                    input.clear();
+                    // if enter is pressed, process the input and call the bot
+                    let input_text = input.clone(); // clone the input text
+                    input.clear(); // clear the input field
 
-                    // ... use the runtime to exec. the async function
+                    // ...use the runtime to exec. the async function
                     let completion_result = rt.block_on(bot::generate_completion(&input_text));
+                    //* get a completion from the bot w/ async; Runtime.block_on is the runtime's entry point and it runs the future arg. to completion
 
                     match completion_result {
-                        Ok(completion) => {
-                            output = completion;
-                        }
-                        Err(err) => {
-                            output = format!("Error generating completion: {}", err);
-                        }
+                        // update the output with either the completion or the error message
+                        #[rustfmt::skip]
+                        Ok(completion) => { output = completion; }
+                        #[rustfmt::skip]
+                        Err(err) => { output = format!("Error generating completion: {}", err); }
                     }
                 }
-                event::KeyCode::Char(c) => input.push(c),
-                event::KeyCode::Backspace => {
-                    input.pop();
-                }
-                event::KeyCode::Esc => {
-                    break;
-                }
-                _ => {}
+                event::KeyCode::Char(c) => input.push(c), // add typed character to the input
+                #[rustfmt::skip]
+                event::KeyCode::Backspace => { input.pop(); } // remove typed character from input
+                #[rustfmt::skip]
+                event::KeyCode::Esc => { break; } // exit the loop //TODO: confirm message or return to home; learn multipage apps
+                _ => {} // catch-all for doing nothing with any other key presses //? which ones?
             }
         }
     }
 
-    // Restore terminal
+    // ... Restore the terminal
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),
@@ -96,10 +73,5 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
     terminal.show_cursor()?;
 
-    Ok(())
+    Ok(()) // return Ok, i.e successful completion
 }
-
-// Placeholder function for input processing (replace with your own logic)
-// fn process_input(input: &str) -> String {
-//     format!("You entered: {}", input)
-// }

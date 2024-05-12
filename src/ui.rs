@@ -1,9 +1,10 @@
 // ui.rs
 
-use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode};
+// use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode};
 use std::io;
 use tui::{
-    backend::{Backend, CrosstermBackend},
+    backend::Backend,
+    // backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
