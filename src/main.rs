@@ -3,12 +3,13 @@
 mod bot;
 mod decoder;
 // mod ui;
+// mod robot;
 mod ux;
 
 use crossterm::event; // provides functionality to read keyboard, mouse and terminal resize events.
-use crossterm::event::DisableMouseCapture;
+use crossterm::event::DisableMouseCapture; //? https://ratatui.rs/concepts/backends/mouse-capture/
 use crossterm::event::EnableMouseCapture;
-use crossterm::terminal::EnterAlternateScreen;
+use crossterm::terminal::EnterAlternateScreen; //? https://ratatui.rs/concepts/backends/alternate-screen/
 use crossterm::terminal::LeaveAlternateScreen;
 use crossterm::{
     execute,
@@ -16,13 +17,13 @@ use crossterm::{
 };
 use ratatui::backend::CrosstermBackend;
 use std::{error::Error, io};
-use tokio::runtime::Runtime;
+use tokio::runtime::Runtime; //? https://tokio.rs/tokio/tutorial/hello-tokio
 
 fn main() -> Result<(), Box<dyn Error>> {
     let rt = Runtime::new()?; // create tokio runtime outside the event loop
 
     // ... Set up the terminal
-    enable_raw_mode()?; // bypass standard input processing
+    enable_raw_mode()?; // bypass standard input processing //? https://ratatui.rs/concepts/backends/raw-mode/
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?; // macro from the crossterm crate
     let backend = CrosstermBackend::new(stdout); // creates backend for the TUI
