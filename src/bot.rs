@@ -5,8 +5,6 @@ use crate::decoder;
 use dotenv::dotenv;
 use reqwest::{header, Client, StatusCode};
 use serde::{Deserialize, Serialize};
-// use serde_json;
-// use serde_json::json;
 use std::env;
 
 // ==> STRUCTS for elements of the request body (🌐: https://ai.google.dev/gemini-api/docs/get-started/rest)
